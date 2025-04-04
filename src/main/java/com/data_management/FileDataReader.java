@@ -1,4 +1,14 @@
 package com.data_management;
 
-public class FileDataReader {
+import java.io.IOException;
+
+public class FileDataReader implements DataReader{
+    public FileDataReader(String path){
+
+    }
+
+    @Override
+    public void readData(DataStorage dataStorage) throws IOException {
+
+    }
 }
