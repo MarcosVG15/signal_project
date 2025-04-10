@@ -16,11 +16,25 @@ public class FileOutputStrategy implements OutputStrategy {
     // constants should be static
     public static final ConcurrentHashMap<String, String> FILE_MAP = new ConcurrentHashMap<>(); // Any time we encounter a final , we have to write the name in capitals;
 
+
     public FileOutputStrategy(String baseDirectory) {
 
         this.baseDirectory = baseDirectory;
     }
 
+
+    /**
+     * This method takes in four variables with which it first creates a file directory
+     * @throws IOException - makes sure that the filed is created without any error and if there is that they are flagged
+     *
+     * After taking care of creating a file we now start adding the values to it
+     * @throws IOException makes sure that the file gets filled without any issues
+     *
+     * @param patientId - the ID of the patient
+     * @param timestamp -  at what time the test was "taken"
+     * @param label - what the test consisted of
+     * @param data- what the value was
+     */
     @Override
     public void output(int patientId, long timestamp, String label, String data) {
         try {
