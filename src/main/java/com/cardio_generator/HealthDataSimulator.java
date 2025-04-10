@@ -29,6 +29,7 @@ public class HealthDataSimulator {
     private static OutputStrategy outputStrategy = new ConsoleOutputStrategy(); // Default output strategy
     private static final Random random = new Random();
 
+
     public static void main(String[] args) throws IOException {
 
         parseArguments(args);
@@ -40,6 +41,8 @@ public class HealthDataSimulator {
 
         scheduleTasksForPatients(patientIds);
     }
+
+
 
     private static void parseArguments(String[] args) throws IOException {
         for (int i = 0; i < args.length; i++) {
