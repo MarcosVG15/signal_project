@@ -1,5 +1,6 @@
 package com.cardio_generator.outputs;
 
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -7,7 +8,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+/**
+ * It is a class that implements {@link OutputStrategy}
+ * to save all patient information in a file of our choice
+ */
 // The name of the File was lower case and was fixed to follow the CamelCase writing convention
 public class FileOutputStrategy implements OutputStrategy {
 
@@ -16,16 +20,19 @@ public class FileOutputStrategy implements OutputStrategy {
     // constants should be static
     public static final ConcurrentHashMap<String, String> FILE_MAP = new ConcurrentHashMap<>(); // Any time we encounter a final , we have to write the name in capitals;
 
-
+    /**
+     * The constructor takes in a directory as a string and assignes it as a global private variable
+     * @param baseDirectory - address of the directory where we want to save the data
+     */
     public FileOutputStrategy(String baseDirectory) {
-
         this.baseDirectory = baseDirectory;
     }
 
 
     /**
-     * This method takes in four variables with which it first creates a file directory
-     * @throws IOException - makes sure that the filed is created without any error and if there is that they are flagged
+     * This method  creates if needed a file where the patient information will be stored in
+     *
+     * @throws IOException - makes sure that the filed is created without any error and if there is that they are flagged.
      *
      * After taking care of creating a file we now start adding the values to it
      * @throws IOException makes sure that the file gets filled without any issues
