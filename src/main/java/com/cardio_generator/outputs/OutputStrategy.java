@@ -1,6 +1,11 @@
 package com.cardio_generator.outputs;
 
 
+/**
+ * The interface {@code OutputStrategy } is used to save/ output the information fro
+ * each patient
+ */
+
 public interface OutputStrategy {
 
     /**
@@ -10,7 +15,7 @@ public interface OutputStrategy {
      * @param label - the test that was run on the patient
      * @param data - the data collected from the test
      *
-     * This interface is used by all the generators
+     * It is used by all the generators to save these four values.
      */
     void output(int patientId, long timestamp, String label, String data);
 }
