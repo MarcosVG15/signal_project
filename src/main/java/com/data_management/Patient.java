@@ -52,7 +52,19 @@ public class Patient {
      *         range
      */
     public List<PatientRecord> getRecords(long startTime, long endTime) {
-        // TODO Implement and test this method
-        return this.patientRecords;
+
+        ArrayList<PatientRecord> selectivePatientRecords = new ArrayList<>();
+
+        for( int i = 0 ; i<patientRecords.size() ; i++){
+            if(patientRecords.get(i).getTimestamp() >= startTime){
+                while(patientRecords.get(i).getTimestamp() <= endTime){
+                    selectivePatientRecords.add(patientRecords.get(i));
+                    i++ ;
+                }
+                i = patientRecords.size() ;
+            }
+        }
+
+        return selectivePatientRecords;
     }
 }
