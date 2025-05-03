@@ -55,16 +55,17 @@ public class Patient {
 
         ArrayList<PatientRecord> selectivePatientRecords = new ArrayList<>();
 
-        for( int i = 0 ; i<patientRecords.size() ; i++){
-            if(patientRecords.get(i).getTimestamp() >= startTime){
-                while(patientRecords.get(i).getTimestamp() <= endTime){
-                    selectivePatientRecords.add(patientRecords.get(i));
-                    i++ ;
-                }
-                i = patientRecords.size() ;
+        for(int i =0  ; i<patientRecords.size() ; i++){
+            long timeStamp = patientRecords.get(i).getTimestamp();
+            if(timeStamp >= startTime && timeStamp <= endTime){
+                selectivePatientRecords.add(patientRecords.get(i));
             }
         }
 
         return selectivePatientRecords;
+    }
+
+    public List<PatientRecord> getRecords() {
+        return patientRecords;
     }
 }

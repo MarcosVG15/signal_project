@@ -20,7 +20,7 @@ public class DataStorage {
      * Constructs a new instance of DataStorage, initializing the underlying storage
      * structure.
      */
-    public DataStorage(DataReader reader) {
+    public DataStorage() {
         this.patientMap = new HashMap<>();
 
     }
@@ -65,7 +65,11 @@ public class DataStorage {
         if (patient != null) {
             return patient.getRecords(startTime, endTime);
         }
-        return new ArrayList<>(); // return an empty list if no patient is found
+        else {
+            System.out.println("patient is Null");
+            return new ArrayList<>(); // return an empty list if no patient is found
+        }
+
     }
 
     /**
@@ -86,15 +90,15 @@ public class DataStorage {
      */
     public static void main(String[] args) throws IOException {
         // DataReader is not defined in this scope, should be initialized appropriately.
-         DataReader reader = new FileDataReader("output");
-        DataStorage storage = new DataStorage(reader);
+        DataReader reader = new FileDataReader("output");
+        DataStorage storage = new DataStorage();
 
         // Assuming the reader has been properly initialized and can read data into the
         // storage
          reader.readData(storage);
 
         // Example of using DataStorage to retrieve and print records for a patient
-        List<PatientRecord> records = storage.getRecords(1, 1700000000000L, 1800000000000L);
+        List<PatientRecord> records = storage.getRecords(8, 1700000000000L, 1800000000000L);
         for (PatientRecord record : records) {
             System.out.println("Record for Patient ID: " + record.getPatientId() +
                     ", Type: " + record.getRecordType() +
@@ -107,6 +111,7 @@ public class DataStorage {
 
         // Evaluate all patients' data to check for conditions that may trigger alerts
         for (Patient patient : storage.getAllPatients()) {
+            System.out.println("..........................."+patient.getRecords().get(0).getPatientId());
             alertGenerator.evaluateData(patient);
         }
     }

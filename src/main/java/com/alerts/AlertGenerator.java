@@ -4,12 +4,10 @@ import com.data_management.DataStorage;
 import com.data_management.Patient;
 import com.data_management.PatientRecord;
 
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * The {@code AlertGenerator} class is responsible for monitoring patient data
@@ -18,13 +16,17 @@ import java.util.stream.Stream;
  * it against specific health criteria.
  */
 public class AlertGenerator {
-    private DataStorage dataStorage;
+    private ArrayList<Alert> Alerts = new ArrayList<>();
+    private  DataStorage dataStorage;
 
     private static final double SYSTOLIC_PRESSURE_MAX = 180 ;
     private static final double SYSTOLIC_PRESSURE_MIN = 90 ;
     private static final double DIASTOLIC_PRESSURE_MAX = 120 ;
     private static final double DIASTOLIC_PRESSURE_MIN = 60 ;
     private static final double OXYGEN_SATURATION_MIN = 92 ;
+
+    private String patientId ;
+
 
 
 
@@ -53,17 +55,18 @@ public class AlertGenerator {
     public void evaluateData(Patient patient) {
 
 
-        Long endTime = System.currentTimeMillis();
-        Long startTime = endTime -(60*60*1000) ;
-        List<PatientRecord> records = patient.getRecords(startTime , endTime) ;
+        long endTime = System.currentTimeMillis();
+        long startTime = endTime -(60*60*1000) ;
+        List<PatientRecord> recordsFull = patient.getRecords() ;//gets everything for now
+        List<PatientRecord> records = patient.getRecords(recordsFull.get(recordsFull.size()-1).getTimestamp()-(60*60*1000), recordsFull.get(recordsFull.size()-1).getTimestamp() ) ;//gets everything for now
 
-        Alert alert = new Alert(null , null , 1) ;
+        patientId = Integer.toString(recordsFull.get(0).getPatientId());
 
-        bloodPressureDataAlert(records , alert);
-        bloodSaturationAlerts(records , alert) ;
-        hypotensiveHypoxemiaAlert(records , alert) ;
-        ECGAlert(records, alert);
-        ButtonEmergency(records ,alert);
+        bloodPressureDataAlert(records );
+        bloodSaturationAlerts(records ) ;
+        hypotensiveHypoxemiaAlert(records ) ;
+        ECGAlert(records);
+        ButtonEmergency(records);
 
 
 
@@ -84,9 +87,15 @@ public class AlertGenerator {
             alert.getCondition(),
             alert.getTimestamp()
         );
+        Alerts.add(alert);
+
     }
 
-    private List<PatientRecord> getSpecficValueRecord(String label , List<PatientRecord> records){
+    public List<Alert> getAlerts(){
+        return Alerts;
+    }
+
+    private List<PatientRecord> getSpecificValues(String label , List<PatientRecord> records){
         List<PatientRecord> specificPatientRecord = new ArrayList<>();
 
         for (PatientRecord record : records){
@@ -94,130 +103,189 @@ public class AlertGenerator {
                 specificPatientRecord.add(record) ;
             }
         }
-
+        if(records.isEmpty()) {
+            System.out.println("Is empty");
+        }
         return specificPatientRecord ;
     }
 
-    private void bloodPressureDataAlert( List<PatientRecord> records, Alert alert){
+    public void bloodPressureDataAlert(List<PatientRecord> records){
 
-        List<PatientRecord> systolic = getSpecficValueRecord("SystolicPressure" , records) ;
-        List<PatientRecord> diastolic = getSpecficValueRecord("DiastolicPressure" , records)  ;
+        double[] systolicArr = new double[3];
+        double[] diastolicArr = new double[3];
 
-
-        double[] systolicArr = new double[4];
-        double[] diastolicArr = new double[4];
-
+        int s  = 0 ;
+        int d =  0 ;
         int i = 0;
+
         while (records.size() > i) {
-            if (i < 4) {
-                systolicArr[i] = systolic.get(i).getMeasurementValue();
-                checkBloodPressure("SystolicPressure", systolicArr, alert);
+            PatientRecord patientRecord = records.get(i);
+            if(patientRecord.getRecordType().equalsIgnoreCase("SystolicPressure")){
+                if(s<3){
+                    systolicArr[s] = patientRecord.getMeasurementValue();
+                    System.out.println(Arrays.toString(systolicArr));
+                    if(systolicArr[s]<SYSTOLIC_PRESSURE_MIN || systolicArr[s]>SYSTOLIC_PRESSURE_MAX){
+                        Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
+                        triggerAlert(alert) ;
+                        return ;
 
-                diastolicArr[i] = diastolic.get(i).getMeasurementValue();
-                checkBloodPressure("DiastolicPressure", diastolicArr, alert);
-
-            } else {
-                for (int j = 1; j < diastolicArr.length; j++) {
-                    diastolicArr[j - 1] = diastolicArr[j];
-                    systolicArr[j-1] = systolicArr[j] ;
+                    }
                 }
-                systolicArr[systolicArr.length - 1] = systolic.get(i).getMeasurementValue();
-                checkBloodPressure("SystolicPressure", systolicArr, alert);
+                else{
 
-                diastolicArr[diastolicArr.length - 1] = diastolic.get(i).getMeasurementValue();
-                checkBloodPressure("DiastolicPressure", diastolicArr, alert);
+                    systolicArr = Arrays.copyOfRange(systolicArr , 1 , systolicArr.length+1);
+                    systolicArr[systolicArr.length-1] = patientRecord.getMeasurementValue();
+                    System.out.println(Arrays.toString(systolicArr));
+                    Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
+                    if(alert!= null){
+                        triggerAlert(alert) ;
+                        return ;
+                    }
+                }
 
+                s++;
             }
+            else if(patientRecord.getRecordType().equalsIgnoreCase("DiastolicPressure")){
+                if(d<3){
+                    diastolicArr[d] = patientRecord.getMeasurementValue();
+                    System.out.println(Arrays.toString(diastolicArr));
+                    if(diastolicArr[d]<DIASTOLIC_PRESSURE_MIN || diastolicArr[d]>DIASTOLIC_PRESSURE_MAX){
+                        Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
+                        triggerAlert(alert) ;
+                        return ;
+
+                    }
+                }
+                else{
+                    diastolicArr = Arrays.copyOfRange(diastolicArr , 1 , diastolicArr.length+1);
+                    diastolicArr[diastolicArr.length-1] = patientRecord.getMeasurementValue();
+                    System.out.println(Arrays.toString(diastolicArr));
+                    Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
+                    if(alert!= null){
+                        triggerAlert(alert) ;
+                        return ;
+                    }
+                }
+                d++;
+            }
+
             i++;
         }
 
     }
 
-    private void checkBloodPressure(String label , double[] past3Records , Alert alert){
+    private Alert checkBloodPressure(String label , double[] past3Records, long timeStamp , String patientId){
 
         switch (label){
             case ("SystolicPressure") :
                 if(Arrays.stream(past3Records).anyMatch(v -> v < SYSTOLIC_PRESSURE_MIN || v > SYSTOLIC_PRESSURE_MAX)){
-                    return ;
+                    Alert alert = new Alert(patientId , "SystolicPressure" ,timeStamp );
+                    return alert;
                 }
-                if(IntStream.range(1, past3Records.length)
+                else if(IntStream.range(1, past3Records.length)
                         .filter(j -> Math.abs(past3Records[j] - past3Records[j - 1]) >= 10)
-                        .count() >=3) {
-
-                    triggerAlert(alert);
+                        .count() >=2) {
+                    Alert alert = new Alert(patientId , "SystolicPressure" ,timeStamp );
+                    return alert;
                 }
             break ;
             case ("DiastolicPressure"):
                 if(Arrays.stream(past3Records).anyMatch(v -> v < DIASTOLIC_PRESSURE_MIN || v > DIASTOLIC_PRESSURE_MAX)){
-                    return ;
+                    Alert alert = new Alert(patientId , "DiastolicPressure" ,timeStamp );
+                    return alert;
                 }
-                if(IntStream.range(1, past3Records.length)
+                else if(IntStream.range(1, past3Records.length)
                         .filter(j -> Math.abs(past3Records[j] - past3Records[j - 1]) >= 10)
-                        .count() >3) {
-
-                    triggerAlert(alert);
+                        .count() >=2) {
+                    Alert alert = new Alert(patientId , "DiastolicPressure" ,timeStamp );
+                    return alert;
                 }
             break;
             default:
-                return;
+                return null;
         }
+        return null ;
     }
-    private void bloodSaturationAlerts(List<PatientRecord> originalRecords, Alert alert){
+    public void bloodSaturationAlerts(List<PatientRecord> originalRecords ){
         // I assume that the records contain different types of informatio , which is why I filter the original records.
-        List<PatientRecord> records = getSpecficValueRecord("Saturation" , originalRecords) ;
+        List<PatientRecord> records = getSpecificValues("Saturation" , originalRecords) ;
 
-        double previousVal = records.get(0).getMeasurementValue() ;
-        long previousTime = records.get(0).getTimestamp() ;
+        if(records.isEmpty()){
+            return;
+        }
 
-        int i = 1 ;
+        double previousVal = records.get(0).getMeasurementValue() ; ;
+        long previousTime = records.get(0).getTimestamp();;
+
+        double currentVal= records.get(0).getMeasurementValue() ;
+        long currentTime = records.get(0).getTimestamp();
+
+        int i = 0 ;
         while ( i<records.size()){
-            double currentVal = records.get(i).getMeasurementValue() ;
-            if(currentVal<= OXYGEN_SATURATION_MIN){
-                triggerAlert(alert);
-                return;
+            currentTime = records.get(i).getTimestamp() ;
+            currentVal = records.get(i).getMeasurementValue() ;
+            if (currentVal> previousVal){ // Such that the previousVal is always the highest value in the interval
+                previousVal = currentVal ;
+                previousTime = currentTime;
             }
             else{
-                long currentTime = records.get(i).getTimestamp() ;
-
-                if(Math.abs(currentVal-previousVal)>5){
+                if(currentVal< OXYGEN_SATURATION_MIN){
+                    Alert alert = new Alert(String.valueOf(records.get(0).getPatientId()) ,"Saturation", records.get(i).getTimestamp() );
                     triggerAlert(alert);
                     return;
                 }
-                else if(Math.abs(previousTime - currentTime)>=1000*60*10){
-                    previousTime = currentTime ;
-                    previousVal = currentVal ;
+                else{
+                    if( (currentTime - previousTime) >= 1000*60*10){ // the interval has passed meaning we have to reset the
+                        previousVal = currentVal;                    // previous value to something smaller
+                        previousTime = currentTime ;
+                    }
+                    if(Math.abs(currentVal-previousVal)>previousVal*0.05){
+                        Alert alert = new Alert(String.valueOf(records.get(0).getPatientId()) ,"Saturation", records.get(i).getTimestamp() );
+                        triggerAlert(alert);
+                        return;
+                    }
 
                 }
+
             }
             i++;
+
         }
     }
 
-    private void hypotensiveHypoxemiaAlert(List<PatientRecord> records, Alert alert){
+    public void hypotensiveHypoxemiaAlert(List<PatientRecord> records){
         ArrayList<Boolean>TriggerSys  = new ArrayList<>();
         ArrayList<Boolean>Trigger02  = new ArrayList<>();
 
         int i = 0 ;
         while(i <records.size()){
+            //System.out.println("Running hypotensiveHypoxemiaAlert "+i);
 
             PatientRecord currentRecord = records.get(i) ;
             switch (currentRecord.getRecordType()){
                 case("SystolicPressure") :
-                    if(currentRecord.getMeasurementValue()<=SYSTOLIC_PRESSURE_MIN){
+                    if(currentRecord.getMeasurementValue()<SYSTOLIC_PRESSURE_MIN){
                         TriggerSys.add(true);
                     }
                 break ;
                 case("Saturation"):
-                    if(currentRecord.getMeasurementValue()<=OXYGEN_SATURATION_MIN) {
+                    if(currentRecord.getMeasurementValue()<OXYGEN_SATURATION_MIN) {
                         Trigger02.add(true);
                     }
                 break ;
+                default:
+                    break;
+
+
             }
             if(Trigger02.isEmpty() | TriggerSys.isEmpty()){
+                i++;
                 continue;
             }
-            else if(Trigger02.getLast() & TriggerSys.getLast()){
+            else if(Trigger02.get(Trigger02.size()-1) & TriggerSys.get(TriggerSys.size()-1)){
+                Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) , "HypotensiveHypoxemia" , records.get(i).getTimestamp());
                 triggerAlert(alert);
+                return;
             }
 
             i++;
@@ -225,26 +293,37 @@ public class AlertGenerator {
 
     }
 
-    private void ECGAlert(List<PatientRecord> records, Alert alert){
-        List<PatientRecord> ECG = getSpecficValueRecord("WhiteBloodCells" , records);
+    public void ECGAlert(List<PatientRecord> records){
+        List<PatientRecord> ECG = getSpecificValues("ECG" , records);
+
 
         int i = 0 ;
-        double rangeOfTriggering = 0.5 ;
+        double rangeOfTriggering = 1 ;
         double average = 0 ;
 
-        double [] window = new double[(int)ECG.size()/20];
+        if(ECG.size()<5){
+            System.out.println("Not enough data to get Average");
+            return;
+        }
+
+        double [] window = new double[5];
+        //System.out.println(ECG.size());
 
         while (i< ECG.size()){
             if(i<window.length){
+
                 window[i] = ECG.get(i).getMeasurementValue();
+                i++;
+                continue;
             }
             else{
                 average  = getAverage(window) ;
-                window = Arrays.copyOfRange(window ,0, window.length-1 );
-                window[i] = ECG.get(i).getMeasurementValue() ;
+                window = Arrays.copyOfRange(window ,0, window.length);
+                window[window.length-1] = ECG.get(i).getMeasurementValue() ;
             }
 
-            if(Math.abs(window[i] - average) > rangeOfTriggering){
+            if((window[window.length-1] - average) > rangeOfTriggering){
+                Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) ,"Running ECG",ECG.get(i).getTimestamp() );
                 triggerAlert(alert);
                 return ;
             }
@@ -262,15 +341,17 @@ public class AlertGenerator {
         return average/ window.length ;
     }
 
-    private void ButtonEmergency(List<PatientRecord> records , Alert alert){
-        List<PatientRecord> emergencyButton = getSpecficValueRecord("EmergencyButton"  , records);
-
+    public void ButtonEmergency(List<PatientRecord> records ){
+        List<PatientRecord> emergencyButton = getSpecificValues("EmergencyButton"  , records);
         int i =0 ;
         while(i<emergencyButton.size()){
+
             if(emergencyButton.get(i).getMeasurementValue() ==1 ){
-                triggerAlert(alert);
+                 Alert alert = new Alert(String.valueOf(emergencyButton.get(1).getPatientId()) , "EmergencyButton" , records.get(i).getTimestamp());
+                 triggerAlert(alert);
                 return;
             }
+            i++;
         }
 
 
