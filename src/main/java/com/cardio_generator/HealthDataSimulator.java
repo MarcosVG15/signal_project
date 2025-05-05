@@ -53,6 +53,9 @@ public class HealthDataSimulator {
         Collections.shuffle(patientIds); // Randomize the order of patient IDs
 
         scheduleTasksForPatients(patientIds);
+
+
+
     }
 
     /**

@@ -58,6 +58,10 @@ public class AlertGeneratorTest {
     @Test
     public void testECGAlert() {
 
+        DataStorage storage  = new DataStorage() ;
+        AlertGenerator generator = new AlertGenerator(storage) ;
+
+        //Shows that program only triggers if the value PEAKS over a certain threshold
 
         Patient r1 = new Patient(1);
         r1.addRecord(2,"ECG" , System.currentTimeMillis());
@@ -68,10 +72,24 @@ public class AlertGeneratorTest {
         r1.addRecord(-1,"ECG" , System.currentTimeMillis());
 
 
-        DataStorage storage  = new DataStorage() ;
-        AlertGenerator generator = new AlertGenerator(storage) ;
-
         generator.ECGAlert(r1.getRecords());
+
+
+        //I have set a threshold of 1 which means that it will only trigger if the value increases by more than 1
+        Patient r2 = new Patient(1);
+        r2.addRecord(2,"ECG" , System.currentTimeMillis());
+        r2.addRecord(2,"ECG" , System.currentTimeMillis());
+        r2.addRecord(2,"ECG" , System.currentTimeMillis());
+        r2.addRecord(2,"ECG" , System.currentTimeMillis());
+        r2.addRecord(2,"ECG" , System.currentTimeMillis());
+        r2.addRecord(3.1,"ECG" , System.currentTimeMillis());
+
+
+        generator.ECGAlert(r2.getRecords());
+
+
+
+
     }
 
 
