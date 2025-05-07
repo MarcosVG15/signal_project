@@ -13,6 +13,7 @@ import com.cardio_generator.outputs.OutputStrategy;
 public class BloodSaturationDataGenerator implements PatientDataGenerator {
     private static final Random random = new Random();
     private int[] lastSaturationValues;
+    private int Values ;
 
 
     /**
@@ -51,6 +52,7 @@ public class BloodSaturationDataGenerator implements PatientDataGenerator {
 
             // Ensure the saturation stays within a realistic and healthy range
             newSaturationValue = Math.min(Math.max(newSaturationValue, 90), 100);
+            Values = newSaturationValue ;
             lastSaturationValues[patientId] = newSaturationValue;
             outputStrategy.output(patientId, System.currentTimeMillis(), "Saturation",
                     Double.toString(newSaturationValue) + "%");
@@ -60,5 +62,27 @@ public class BloodSaturationDataGenerator implements PatientDataGenerator {
             System.err.println("An error occurred while generating blood saturation data for patient " + patientId);
             e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
         }
+    }
+
+    /**
+     * return the saturation level
+     * @return - get the generated values.
+     */
+    public int getValues(int patientId){
+        try {
+            // Simulate blood saturation values
+            int variation = random.nextInt(3) - 1; // -1, 0, or 1 to simulate small fluctuations
+            int newSaturationValue = lastSaturationValues[patientId] + variation;
+
+            // Ensure the saturation stays within a realistic and healthy range
+            newSaturationValue = Math.min(Math.max(newSaturationValue, 90), 100);
+            Values = newSaturationValue ;
+            lastSaturationValues[patientId] = newSaturationValue;
+
+        } catch (Exception e) {
+            System.err.println("An error occurred while generating blood saturation data for patient " + patientId);
+            e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
+        }
+        return Values ;
     }
 }

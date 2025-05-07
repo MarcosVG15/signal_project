@@ -57,15 +57,12 @@ public class AlertGenerator {
      */
     public void evaluateData(Patient patient) {
 
-
-
-
         long endTime = System.currentTimeMillis();
-        long startTime = endTime -(60*60*1000) ;
-        List<PatientRecord> recordsFull = patient.getRecords() ;//gets everything for now
-        List<PatientRecord> records = patient.getRecords(recordsFull.get(recordsFull.size()-1).getTimestamp()-(60*60*1000), recordsFull.get(recordsFull.size()-1).getTimestamp() ) ;//gets everything for now
-
-        patientId = Integer.toString(recordsFull.get(0).getPatientId());
+        if (patient == null){
+            System.out.println("patient is null");
+        }
+        List<PatientRecord> records = patient.getRecords() ;//gets everything for now
+        patientId = Integer.toString(records.get(0).getPatientId());
 
         bloodPressureDataAlert(records );
         bloodSaturationAlerts(records ) ;
@@ -146,11 +143,10 @@ public class AlertGenerator {
             if(patientRecord.getRecordType().equalsIgnoreCase("SystolicPressure")){
                 if(s<3){
                     systolicArr[s] = patientRecord.getMeasurementValue();
-                    System.out.println(Arrays.toString(systolicArr));
                     if(systolicArr[s]<SYSTOLIC_PRESSURE_MIN || systolicArr[s]>SYSTOLIC_PRESSURE_MAX){
                         Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                         triggerAlert(alert) ;
-                        return ;
+
 
                     }
                 }
@@ -158,11 +154,9 @@ public class AlertGenerator {
 
                     systolicArr = Arrays.copyOfRange(systolicArr , 1 , systolicArr.length+1);
                     systolicArr[systolicArr.length-1] = patientRecord.getMeasurementValue();
-                    System.out.println(Arrays.toString(systolicArr));
                     Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                     if(alert!= null){
                         triggerAlert(alert) ;
-                        return ;
                     }
                 }
 
@@ -171,22 +165,20 @@ public class AlertGenerator {
             else if(patientRecord.getRecordType().equalsIgnoreCase("DiastolicPressure")){
                 if(d<3){
                     diastolicArr[d] = patientRecord.getMeasurementValue();
-                    System.out.println(Arrays.toString(diastolicArr));
                     if(diastolicArr[d]<DIASTOLIC_PRESSURE_MIN || diastolicArr[d]>DIASTOLIC_PRESSURE_MAX){
                         Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                         triggerAlert(alert) ;
-                        return ;
+
 
                     }
                 }
                 else{
                     diastolicArr = Arrays.copyOfRange(diastolicArr , 1 , diastolicArr.length+1);
                     diastolicArr[diastolicArr.length-1] = patientRecord.getMeasurementValue();
-                    System.out.println(Arrays.toString(diastolicArr));
                     Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                     if(alert!= null){
                         triggerAlert(alert) ;
-                        return ;
+
                     }
                 }
                 d++;
@@ -268,7 +260,7 @@ public class AlertGenerator {
                 previousTime = currentTime;
             }
             else{
-                if(currentVal< OXYGEN_SATURATION_MIN){
+                if(currentVal<= OXYGEN_SATURATION_MIN){
                     Alert alert = new Alert(String.valueOf(records.get(0).getPatientId()) ,"Saturation", records.get(i).getTimestamp() );
                     triggerAlert(alert);
                     return;
@@ -278,7 +270,8 @@ public class AlertGenerator {
                         previousVal = currentVal;                    // previous value to something smaller
                         previousTime = currentTime ;
                     }
-                    if(Math.abs(currentVal-previousVal)>previousVal*0.05){
+                    if((previousVal-currentVal)>previousVal*0.05){
+                        System.out.println("Saturation is at the level of "+currentVal + " previous aturations" + previousVal);
                         Alert alert = new Alert(String.valueOf(records.get(0).getPatientId()) ,"Saturation", records.get(i).getTimestamp() );
                         triggerAlert(alert);
                         return;
@@ -374,13 +367,12 @@ public class AlertGenerator {
                 window = Arrays.copyOfRange(window ,0, window.length);
                 window[window.length-1] = ECG.get(i).getMeasurementValue() ;
 
-                System.out.println(Arrays.toString(window));
             }
 
             if((window[window.length-1] - average) > rangeOfTriggering){
                 Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) ,"Running ECG",ECG.get(i).getTimestamp() );
                 triggerAlert(alert);
-                return ;
+
             }
             i++;
 
@@ -413,7 +405,7 @@ public class AlertGenerator {
         while(i<emergencyButton.size()){
 
             if(emergencyButton.get(i).getMeasurementValue() ==1 ){
-                 Alert alert = new Alert(String.valueOf(emergencyButton.get(1).getPatientId()) , "EmergencyButton" , records.get(i).getTimestamp());
+                 Alert alert = new Alert(String.valueOf(emergencyButton.get(0).getPatientId()) , "EmergencyButton" , records.get(i).getTimestamp());
                  triggerAlert(alert);
                 return;
             }

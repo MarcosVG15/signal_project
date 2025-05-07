@@ -22,6 +22,7 @@ public class BloodPressureDataGenerator implements PatientDataGenerator {
 
     private int[] lastSystolicValues;
     private int[] lastDiastolicValues;
+    private int[] Values = new int[2] ;
 
     /**
      * This constructor initialises the integer arrays and fills them up with a preliminary set of random values
@@ -71,6 +72,9 @@ public class BloodPressureDataGenerator implements PatientDataGenerator {
             lastSystolicValues[patientId] = newSystolicValue;
             lastDiastolicValues[patientId] = newDiastolicValue;
 
+            Values[0] = newSystolicValue ;
+            Values[1] = newDiastolicValue ;
+
             outputStrategy.output(patientId, System.currentTimeMillis(), "SystolicPressure",
                     Double.toString(newSystolicValue));
             outputStrategy.output(patientId, System.currentTimeMillis(), "DiastolicPressure",
@@ -79,5 +83,34 @@ public class BloodPressureDataGenerator implements PatientDataGenerator {
             System.err.println("An error occurred while generating blood pressure data for patient " + patientId);
             e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
         }
+    }
+
+    /**
+     * getter method that allows to extract the generated values
+     * Values[0] - Systeolic Values ;
+     * Values[1] - Diastolic Values;
+     * @return - the generated values
+     */
+    public int[] getValues(int patientId) {
+
+        try {
+            int systolicVariation = random.nextInt(5) - 2; // -2, -1, 0, 1, or 2
+            int diastolicVariation = random.nextInt(5) - 2;
+            int newSystolicValue = lastSystolicValues[patientId] + systolicVariation;
+            int newDiastolicValue = lastDiastolicValues[patientId] + diastolicVariation;
+            // Ensure the blood pressure stays within a realistic and safe range
+            newSystolicValue = Math.min(Math.max(newSystolicValue, 90), 180);
+            newDiastolicValue = Math.min(Math.max(newDiastolicValue, 60), 120);
+            lastSystolicValues[patientId] = newSystolicValue;
+            lastDiastolicValues[patientId] = newDiastolicValue;
+
+            Values[0] = newSystolicValue ;
+            Values[1] = newDiastolicValue ;
+
+        } catch (Exception e) {
+            System.err.println("An error occurred while generating blood pressure data for patient " + patientId);
+            e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
+        }
+        return Values ;
     }
 }

@@ -10,6 +10,7 @@ public class EmergencyButtonGenerator implements PatientDataGenerator{
     private static Random random  = new Random() ;
     private  static final double A = 5 ;
     private  static final double B = 10 ;
+    private double Values;
 
 
     public EmergencyButtonGenerator(int patientCount){
@@ -24,12 +25,12 @@ public class EmergencyButtonGenerator implements PatientDataGenerator{
     public void generate(int patientId, OutputStrategy outputStrategy) {
         try {
 
-            double chance = 0.05 + eButtonArray[patientId] * 0.05;
+            double chance = 0.01 + eButtonArray[patientId] * 0.01;
             boolean pressed = random.nextDouble() < chance;
 
             double value = pressed ? 1.0 : 0.0;
             outputStrategy.output(patientId, System.currentTimeMillis(), "EmergencyButton", Double.toString(value));
-
+            Values = value ;
 
             eButtonArray[patientId] = value;
 
@@ -37,6 +38,24 @@ public class EmergencyButtonGenerator implements PatientDataGenerator{
             System.err.println("An error occurred while generating ECG data for patient " + patientId);
             e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
         }
+    }
+
+
+    public double getValues(int patientId){
+        try {
+            double chance = 0.01 + eButtonArray[patientId] * 0.01;
+            boolean pressed = random.nextDouble() < chance;
+
+            double value = pressed ? 1.0 : 0.0;
+            Values = value ;
+
+            eButtonArray[patientId] = value;
+
+        } catch (Exception e) {
+            System.err.println("An error occurred while generating ECG data for patient " + patientId);
+            e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
+        }
+        return Values;
     }
 
 }

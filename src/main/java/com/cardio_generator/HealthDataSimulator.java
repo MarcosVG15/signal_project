@@ -1,5 +1,7 @@
 package com.cardio_generator;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -8,15 +10,14 @@ import com.cardio_generator.generators.*;
 
 import com.cardio_generator.outputs.*;
 import com.cardio_generator.outputs.FileOutputStrategy;
+import com.data_management.DataStorage;
+import com.data_management.Patient;
+import com.data_management.PatientRecord;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 
 /**
@@ -32,6 +33,7 @@ public class HealthDataSimulator {
     private static ScheduledExecutorService scheduler;
     private static OutputStrategy outputStrategy = new ConsoleOutputStrategy(); // Default output strategy
     private static final Random random = new Random();
+    private static final Map<Integer, Patient> patientRegistry = new ConcurrentHashMap<>();
 
     /**
      * main method is where the class is initialised, it sets a pool size based on patientCount.
@@ -43,11 +45,11 @@ public class HealthDataSimulator {
      */
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         parseArguments(args);
 
-        scheduler = Executors.newScheduledThreadPool(patientCount * 4);
+        scheduler = Executors.newScheduledThreadPool(patientCount*9 );
 
         List<Integer> patientIds = initializePatientIds(patientCount);
         Collections.shuffle(patientIds); // Randomize the order of patient IDs
@@ -55,6 +57,43 @@ public class HealthDataSimulator {
         scheduleTasksForPatients(patientIds);
 
 
+
+    }
+
+
+    // its task is to create a collection on n datapoints such that they can be processed by the alert generator
+    public static void buffer_Analyse(){
+        System.out.println("run buffer");
+        Map<Integer , Patient> bufferPatientMap = new ConcurrentHashMap<>();
+        long timestamp = System.currentTimeMillis();
+
+
+        for(int i = 1 ; i<patientCount+1 ; i++){
+            List<PatientRecord> record = patientRegistry.get(i).getRecords();
+            for ( int j = 0; j<record.size(); j++){
+                if(record.get(j).getTimestamp()<= timestamp && record.get(j).getTimestamp()>=(timestamp-1000*60*30)){
+                    if(bufferPatientMap.get(i) == null){
+                        Patient patient = new Patient(i);
+                        patient.addRecord(record.get(j).getMeasurementValue() , record.get(j).getRecordType() , record.get(j).getTimestamp());
+                        bufferPatientMap.put(i,patient);
+                    }
+                    else{
+                        bufferPatientMap.get(i).addRecord(record.get(j).getMeasurementValue() , record.get(j).getRecordType() , record.get(j).getTimestamp());
+                    }
+                }
+            }
+
+        }
+        getAlerts(bufferPatientMap);
+
+    }
+
+    private static void getAlerts(Map<Integer , Patient> patientMap){
+        DataStorage dataStorage = null;
+        com.alerts.AlertGenerator alertGenerator = new com.alerts.AlertGenerator(dataStorage);
+        for(int i = 1 ; i<patientCount+1; i++){
+            alertGenerator.evaluateData(patientMap.get(i));
+        }
 
     }
 
@@ -159,6 +198,8 @@ public class HealthDataSimulator {
         List<Integer> patientIds = new ArrayList<>();
         for (int i = 1; i <= patientCount; i++) {
             patientIds.add(i);
+            patientRegistry.put(i , new Patient(i));
+
         }
         return patientIds;
     }
@@ -177,13 +218,23 @@ public class HealthDataSimulator {
         AlertGenerator alertGenerator = new AlertGenerator(patientCount);
 
         for (int patientId : patientIds) {
-            scheduleTask(() -> ecgDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.SECONDS);
-            scheduleTask(() -> bloodSaturationDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.SECONDS);
-            scheduleTask(() -> bloodPressureDataGenerator.generate(patientId, outputStrategy), 1, TimeUnit.MINUTES);
-            scheduleTask(() -> bloodLevelsDataGenerator.generate(patientId, outputStrategy), 2, TimeUnit.MINUTES);
-            scheduleTask(() -> alertGenerator.generate(patientId, outputStrategy), 20, TimeUnit.SECONDS);
-            scheduleTask(() -> emergencyButtonGenerator.generate(patientId, outputStrategy),1,TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(ecgDataGenerator.getValues(patientId),"ECG",System.currentTimeMillis()), 1, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodSaturationDataGenerator.getValues(patientId),"Saturation",System.currentTimeMillis()), 1, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodPressureDataGenerator.getValues(patientId)[0],"SystolicPressure",System.currentTimeMillis()), 1, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodPressureDataGenerator.getValues(patientId)[1],"DiastolicPressure",System.currentTimeMillis()), 1, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodLevelsDataGenerator.getValues(patientId)[0],"Cholesterol",System.currentTimeMillis()), 2, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodLevelsDataGenerator.getValues(patientId)[1],"WhiteBloodCells",System.currentTimeMillis()), 2, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(bloodLevelsDataGenerator.getValues(patientId)[2],"RedBloodCells",System.currentTimeMillis()), 2, TimeUnit.SECONDS);
+            scheduleTask(() -> patientRegistry.get(patientId).addRecord(emergencyButtonGenerator.getValues(patientId),"EmergencyButton",System.currentTimeMillis()),15,TimeUnit.SECONDS);
         }
+        scheduleTask(() -> {
+            try {
+                HealthDataSimulator.buffer_Analyse();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 60*30, TimeUnit.SECONDS);
+
     }
 
     /**
@@ -196,4 +247,5 @@ public class HealthDataSimulator {
     private static void scheduleTask(Runnable task, long period, TimeUnit timeUnit) {
         scheduler.scheduleAtFixedRate(task, random.nextInt(5), period, timeUnit);
     }
+
 }

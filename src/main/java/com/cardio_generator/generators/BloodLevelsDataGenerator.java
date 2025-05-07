@@ -31,6 +31,7 @@ public class BloodLevelsDataGenerator implements PatientDataGenerator {
     private final double[] baselineCholesterol;
     private final double[] baselineWhiteCells;
     private final double[] baselineRedCells;
+    private double[] Values = new double[3];
 
 
     public BloodLevelsDataGenerator(int patientCount) {
@@ -72,6 +73,9 @@ public class BloodLevelsDataGenerator implements PatientDataGenerator {
             double cholesterol = baselineCholesterol[patientId] + (random.nextDouble() - 0.5) * 10; // Small variation
             double whiteCells = baselineWhiteCells[patientId] + (random.nextDouble() - 0.5) * 1; // Small variation
             double redCells = baselineRedCells[patientId] + (random.nextDouble() - 0.5) * 0.2; // Small variation
+            Values[0] = cholesterol ;
+            Values[1] = whiteCells ;
+            Values[2] = redCells ;
 
             // Output the generated values
             outputStrategy.output(patientId, System.currentTimeMillis(), "Cholesterol", Double.toString(cholesterol));
@@ -82,5 +86,30 @@ public class BloodLevelsDataGenerator implements PatientDataGenerator {
             System.err.println("An error occurred while generating blood levels data for patient " + patientId);
             e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
         }
+    }
+
+    /**
+     * getter method that allows us to retrieve the values generated
+     * Values[0]  - return Cholesterol
+     * Values[1]  - return White Blood cells
+     * Values[2] - return Red Blood cells
+     *
+     * @return - all generated values;
+     */
+    public double[] getValues(int patientId){
+        try {
+            // Generate values around the baseline for realism
+            double cholesterol = baselineCholesterol[patientId] + (random.nextDouble() - 0.5) * 10; // Small variation
+            double whiteCells = baselineWhiteCells[patientId] + (random.nextDouble() - 0.5) * 1; // Small variation
+            double redCells = baselineRedCells[patientId] + (random.nextDouble() - 0.5) * 0.2; // Small variation
+            Values[0] = cholesterol ;
+            Values[1] = whiteCells ;
+            Values[2] = redCells ;
+
+        } catch (Exception e) {
+            System.err.println("An error occurred while generating blood levels data for patient " + patientId);
+            e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
+        }
+        return Values ;
     }
 }
