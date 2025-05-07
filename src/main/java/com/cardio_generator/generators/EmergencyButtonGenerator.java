@@ -42,19 +42,14 @@ public class EmergencyButtonGenerator implements PatientDataGenerator{
 
 
     public double getValues(int patientId){
-        try {
-            double chance = 0.01 + eButtonArray[patientId] * 0.01;
-            boolean pressed = random.nextDouble() < chance;
+        OutputStrategy outputStrategy = new OutputStrategy() {
+            @Override
+            public void output(int patientId, long timestamp, String label, String data) {
 
-            double value = pressed ? 1.0 : 0.0;
-            Values = value ;
+            }
+        };
+        generate(patientId , outputStrategy);
 
-            eButtonArray[patientId] = value;
-
-        } catch (Exception e) {
-            System.err.println("An error occurred while generating ECG data for patient " + patientId);
-            e.printStackTrace(); // This will print the stack trace to help identify where the error occurred.
-        }
         return Values;
     }
 
