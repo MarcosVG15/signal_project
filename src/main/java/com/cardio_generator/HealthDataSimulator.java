@@ -35,6 +35,33 @@ public class HealthDataSimulator {
     private static final Random random = new Random();
     private static final Map<Integer, Patient> patientRegistry = new ConcurrentHashMap<>();
 
+
+    private static volatile HealthDataSimulator instance;
+
+    public static HealthDataSimulator getInstance(String[] args) throws IOException {
+        if (instance == null) {
+            synchronized (HealthDataSimulator.class) {
+                if (instance == null) {
+                    instance = new HealthDataSimulator(args);
+                }
+            }
+        }
+        return instance;
+    }
+
+
+    public HealthDataSimulator(String[] args) throws IOException {
+        parseArguments(args);
+
+        scheduler = Executors.newScheduledThreadPool(patientCount*9 );
+
+        List<Integer> patientIds = initializePatientIds(patientCount);
+        Collections.shuffle(patientIds); // Randomize the order of patient IDs
+
+        scheduleTasksForPatients(patientIds);
+    }
+
+
     /**
      * main method is where the class is initialised, it sets a pool size based on patientCount.
      * After which the patientId's are generated and shuffled. Once this is done the main calls

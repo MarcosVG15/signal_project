@@ -1,8 +1,9 @@
 package com.design_pattern.Factory;
 
 import com.alerts.Alert;
+import com.design_pattern.strategy.HeartRateStrategy;
 
-public class ECGAlertFactory extends AlertFactory{
+public class HeartRateAlertFactory extends AlertFactory{
 
     @Override
     public Alert createAlert(String patientId, String condition, long timestamp) {

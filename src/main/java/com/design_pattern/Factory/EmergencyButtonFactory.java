@@ -2,7 +2,8 @@ package com.design_pattern.Factory;
 
 import com.alerts.Alert;
 
-public class BloodOxygenAlertFactory extends AlertFactory {
+public class EmergencyButtonFactory extends AlertFactory{
+
 
     @Override
     public Alert createAlert(String patientId, String condition, long timestamp) {

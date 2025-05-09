@@ -20,10 +20,25 @@ public class DataStorage {
      * Constructs a new instance of DataStorage, initializing the underlying storage
      * structure.
      */
-    public DataStorage() {
+
+    private static volatile DataStorage instance;
+
+
+    private DataStorage() {
         this.patientMap = new HashMap<>();
 
     }
+    public static DataStorage getInstance() throws IOException {
+        if (instance == null) {
+            synchronized (DataStorage.class) {
+                if (instance == null) {
+                    instance = new DataStorage();
+                }
+            }
+        }
+        return instance;
+    }
+
 
     /**
      * Adds or updates patient data in the storage.

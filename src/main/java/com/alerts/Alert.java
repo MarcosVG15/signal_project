@@ -1,12 +1,14 @@
 package com.alerts;
 
 
- /**
+import com.design_pattern.Decorators.AlertInterfaceDec;
+
+/**
      * In essence this code makes sure that where an "Alert" has been set in another class
      * that we can retrieve the necessary information to diagnose the patient
      */
 // Represents an alert
-public class Alert {
+public class Alert implements AlertInterfaceDec {
 
     /**
      * This class contains three variables :
@@ -19,7 +21,7 @@ public class Alert {
     private String condition;
     private long timestamp;
 
-    public Alert(String patientId, String condition, long timestamp) {
+    public Alert(String patientId, String condition, long timestamp)  {
         this.patientId = patientId;
         this.condition = condition;
         this.timestamp = timestamp;
