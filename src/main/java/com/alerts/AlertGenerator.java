@@ -150,7 +150,6 @@ public class AlertGenerator {
                     if(systolicArr[s]<SYSTOLIC_PRESSURE_MIN || systolicArr[s]>SYSTOLIC_PRESSURE_MAX){
                         Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                         triggerAlert(alert) ;
-                        return ;
 
                     }
                 }
@@ -162,7 +161,6 @@ public class AlertGenerator {
                     Alert alert = checkBloodPressure("SystolicPressure" , systolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                     if(alert!= null){
                         triggerAlert(alert) ;
-                        return ;
                     }
                 }
 
@@ -175,7 +173,7 @@ public class AlertGenerator {
                     if(diastolicArr[d]<DIASTOLIC_PRESSURE_MIN || diastolicArr[d]>DIASTOLIC_PRESSURE_MAX){
                         Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                         triggerAlert(alert) ;
-                        return ;
+
 
                     }
                 }
@@ -186,7 +184,6 @@ public class AlertGenerator {
                     Alert alert = checkBloodPressure("DiastolicPressure" , diastolicArr , patientRecord.getTimestamp() , String.valueOf(patientRecord.getPatientId()));
                     if(alert!= null){
                         triggerAlert(alert) ;
-                        return ;
                     }
                 }
                 d++;
@@ -281,7 +278,6 @@ public class AlertGenerator {
                     if(Math.abs(currentVal-previousVal)>previousVal*0.05){
                         Alert alert = new Alert(String.valueOf(records.get(0).getPatientId()) ,"Saturation", records.get(i).getTimestamp() );
                         triggerAlert(alert);
-                        return;
                     }
 
                 }
@@ -330,7 +326,6 @@ public class AlertGenerator {
             else if(Trigger02.get(Trigger02.size()-1) & TriggerSys.get(TriggerSys.size()-1)){
                 Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) , "HypotensiveHypoxemia" , records.get(i).getTimestamp());
                 triggerAlert(alert);
-                return;
             }
 
             i++;
@@ -378,9 +373,8 @@ public class AlertGenerator {
             }
 
             if((window[window.length-1] - average) > rangeOfTriggering){
-                Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) ,"Running ECG",ECG.get(i).getTimestamp() );
+                Alert alert = new Alert(String.valueOf(records.get(1).getPatientId()) ,"ECG",ECG.get(i).getTimestamp() );
                 triggerAlert(alert);
-                return ;
             }
             i++;
 
@@ -415,7 +409,6 @@ public class AlertGenerator {
             if(emergencyButton.get(i).getMeasurementValue() ==1 ){
                  Alert alert = new Alert(String.valueOf(emergencyButton.get(1).getPatientId()) , "EmergencyButton" , records.get(i).getTimestamp());
                  triggerAlert(alert);
-                return;
             }
             i++;
         }
