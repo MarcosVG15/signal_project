@@ -15,7 +15,7 @@ public class HeartRateStrategy implements AlertInterface{
 
     private List<PatientRecord> ECGRecord ;
     private static final int WINDOW_SIZE = 5 ;
-    private static final double THRESHOLD = 1  ;
+    private static final double THRESHOLD = -1  ;
     private HeartRateAlertFactory factory ;
 
     public HeartRateStrategy(HeartRateAlertFactory factory) {
@@ -47,6 +47,7 @@ public class HeartRateStrategy implements AlertInterface{
             }
             else{
                 if((average-currentRecord.getMeasurementValue()) <=THRESHOLD ){
+                    System.out.println(currentRecord.getMeasurementValue() + " "+ average);
                     generator.triggerAlert(factory.createAlert(String.valueOf(patientId)
                                                     , currentRecord.getRecordType()
                                                     , currentRecord.getTimestamp()));

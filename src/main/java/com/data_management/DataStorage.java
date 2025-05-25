@@ -77,7 +77,7 @@ public class DataStorage {
 
 
         // such that  we can accumulate data
-        if (System.currentTimeMillis() - currentTime > 60_000*15) { // you can change this to the size that you want depends on the size of the batch you want to analyse
+        if (System.currentTimeMillis() - currentTime > 10_000) { // you can change this to the size that you want depends on the size of the batch you want to analyse
             buffer_Analyse();
 
             currentTime = System.currentTimeMillis();
