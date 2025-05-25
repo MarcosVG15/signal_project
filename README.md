@@ -66,3 +66,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 STUDENT WORKING ON THIS PROJECT : 
 	Marcos Vargas ID : i6395637
+
+
+## MAKING THE CODE RUN 
+
+To make the code run , you simply have to go to the Data Storage , insert the URI that you want to select 
+and run the data storage through either the main or directly in the class. In addition to this you can select the size
+of the buffer. Changing the size of the buffer will either if the size is too small result in some functionality missing, 
+or of it is too big delay in the analysis that would result in ineffective analysis.
+
+Furthermore, you can run the simulated version using the health data simulator by running the jar file using this command
+
+java -jar bin\6395637_cardio_data_simulator.jar --output websocket:8080
+
+And then running the DataStorage Class.

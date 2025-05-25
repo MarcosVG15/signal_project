@@ -1,10 +1,14 @@
 package com.data_management;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alerts.AlertGenerator;
 
 /**
@@ -14,7 +18,9 @@ import com.alerts.AlertGenerator;
  * patient IDs.
  */
 public class DataStorage {
-    private Map<Integer, Patient> patientMap; // Stores patient objects indexed by their unique patient ID.
+    private Map<Integer, Patient> patientMap;// Stores patient objects indexed by their unique patient ID.
+    private long currentTime ;
+    private ArrayList<Integer> patientIDs ;
 
     /**
      * Constructs a new instance of DataStorage, initializing the underlying storage
@@ -26,6 +32,9 @@ public class DataStorage {
 
     private DataStorage() {
         this.patientMap = new HashMap<>();
+        this.patientIDs = new ArrayList<>();
+        currentTime = 0;
+
 
     }
     public static DataStorage getInstance() throws IOException {
@@ -54,12 +63,58 @@ public class DataStorage {
      *                         milliseconds since the Unix epoch
      */
     public void addPatientData(int patientId, double measurementValue, String recordType, long timestamp) {
-        Patient patient = patientMap.get(patientId);
-        if (patient == null) {
-            patient = new Patient(patientId);
-            patientMap.put(patientId, patient);
+
+
+        if(patientMap.get(patientId) == null){
+            patientIDs.add(patientId);
+            Patient patient = new Patient(patientId);
+            patient.addRecord(measurementValue , recordType , timestamp);
+            patientMap.put(patientId ,patient);
         }
-        patient.addRecord(measurementValue, recordType, timestamp);
+        else{
+            patientMap.get(patientId).addRecord(measurementValue , recordType , timestamp);
+        }
+
+
+        // such that  we can accumulate data
+        if (System.currentTimeMillis() - currentTime > 60_000*15) { // you can change this to the size that you want depends on the size of the batch you want to analyse
+            buffer_Analyse();
+
+            currentTime = System.currentTimeMillis();
+        }
+
+
+    }
+
+    /**
+     * Accumulates the data based on time intervals after which it uses the alert analysis to  analyse each patient at a time
+     * using the Evaluate Data class .
+     */
+    public  void buffer_Analyse(){
+            System.out.println("Running buffer....................................................................................................");
+            long now = System.currentTimeMillis();
+            Map<Integer, Patient> bufferPatientMap = new ConcurrentHashMap<>();
+
+            for (int patientId : patientIDs) {
+                List<PatientRecord> records = patientMap.get(patientId).getRecords();
+                for (PatientRecord r : records) {
+                    long ts = r.getTimestamp();
+                    if (ts <= now && ts >= (now -  10 * 1000)) {
+                        bufferPatientMap.computeIfAbsent(patientId, id -> new Patient(id))
+                                .addRecord(r.getMeasurementValue(), r.getRecordType(), ts);
+                    }
+                }
+            }
+
+            getAlerts(bufferPatientMap);
+    }
+
+    private  void getAlerts(Map<Integer , Patient> patientMap){
+        AlertGenerator alertGenerator = new AlertGenerator(this);
+        for(int i = 0 ; i<patientIDs.size(); i++){
+            alertGenerator.evaluateData(patientMap.get(patientIDs.get(i)));
+        }
+
     }
 
     /**
@@ -103,31 +158,12 @@ public class DataStorage {
      * 
      * @param args command line arguments
      */
-    public static void main(String[] args) throws IOException {
-        // DataReader is not defined in this scope, should be initialized appropriately.
-        DataReader reader = new FileDataReader("output");
-        DataStorage storage = new DataStorage();
+    public static void main(String[] args) throws IOException, URISyntaxException {
 
-        // Assuming the reader has been properly initialized and can read data into the
-        // storage
-         reader.readData(storage);
+        DataStorage storage = DataStorage.getInstance();
 
-        // Example of using DataStorage to retrieve and print records for a patient
-        List<PatientRecord> records = storage.getRecords(8, 1700000000000L, 1800000000000L);
-        for (PatientRecord record : records) {
-            System.out.println("Record for Patient ID: " + record.getPatientId() +
-                    ", Type: " + record.getRecordType() +
-                    ", Data: " + record.getMeasurementValue() +
-                    ", Timestamp: " + record.getTimestamp());
-        }
 
-        // Initialize the AlertGenerator with the storage
-        AlertGenerator alertGenerator = new AlertGenerator(storage);
-
-        // Evaluate all patients' data to check for conditions that may trigger alerts
-        for (Patient patient : storage.getAllPatients()) {
-            System.out.println("..........................."+patient.getRecords().get(0).getPatientId());
-            alertGenerator.evaluateData(patient);
-        }
+        WebSocketClientAdapter webSocketClientAdapter = new WebSocketClientAdapter( new URI("ws://localhost:8080") , storage);
+        webSocketClientAdapter.startStreaming();
     }
 }

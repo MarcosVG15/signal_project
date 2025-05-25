@@ -60,21 +60,21 @@ public class AlertGenerator {
      */
     public void evaluateData(Patient patient) {
 
-        long endTime = System.currentTimeMillis();
         if (patient == null){
             System.out.println("patient is null");
+        }else{
+            List<PatientRecord> records = patient.getRecords() ;
+            patientId = Integer.toString(records.get(0).getPatientId());
+
+            int patientID = Integer.parseInt(patientId);
+
+            new BloodPressureStrategy(new BloodPressureAlertFactory()).checkAlert(patientID , records , this);
+            new OxygenSaturationStrategy(new OxygenSaturationAlertFactory()).checkAlert(patientID, records ,this);
+            new HeartRateStrategy(new HeartRateAlertFactory()).checkAlert(patientID , records , this);
+            new HypotensiveHypoxemiaStrategy(new HypotensiveHypoxemiaAlertFactory()).checkAlert(patientID , records , this);
+            new EmergencyButtonStrategy(new EmergencyButtonFactory()).checkAlert(patientID , records , this);
         }
-        assert patient != null;
-        List<PatientRecord> records = patient.getRecords() ;//gets everything for now
-        patientId = Integer.toString(records.get(0).getPatientId());
 
-        int patientID = Integer.parseInt(patientId);
-
-        new BloodPressureStrategy(new BloodPressureAlertFactory()).checkAlert(patientID , records , this);
-        new OxygenSaturationStrategy(new OxygenSaturationAlertFactory()).checkAlert(patientID, records ,this);
-        new HeartRateStrategy(new HeartRateAlertFactory()).checkAlert(patientID , records , this);
-        new HypotensiveHypoxemiaStrategy(new HypotensiveHypoxemiaAlertFactory()).checkAlert(patientID , records , this);
-        new EmergencyButtonStrategy(new EmergencyButtonFactory()).checkAlert(patientID , records , this);
 
 
     }

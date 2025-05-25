@@ -29,6 +29,7 @@ public class OxygenSaturationStrategy implements AlertInterface{
         Item LargestItem = new Item(0 , 0) ;
         Item currentItem = new Item(0 , 0 );
 
+        System.out.println(saturationList.size());
         while(i<saturationList.size()){
             PatientRecord currentRecord = saturationList.get(i);
 
@@ -37,13 +38,14 @@ public class OxygenSaturationStrategy implements AlertInterface{
 
             update(LargestItem , currentItem);
             if(currentItem.getMeasurementValue()<OXYGEN_SATURATION_MIN){
+                System.out.println(currentItem.getMeasurementValue());
                 generator.triggerAlert(factory.createAlert(String.valueOf(patientId)
                         , currentRecord.getRecordType()
                         ,currentRecord.getTimestamp()));
             }
             if(!isUpdated && LargestItem.getMeasurementValue()- currentItem.getMeasurementValue()>= LargestItem.getMeasurementValue()*0.05){
                 generator.triggerAlert(factory.createAlert(String.valueOf(patientId)
-                        , currentRecord.getRecordType()+"RAPID DECREASE IN OXYGEN "
+                        , "RAPID DECREASE IN OXYGEN "
                         ,currentRecord.getTimestamp()));
             }
 

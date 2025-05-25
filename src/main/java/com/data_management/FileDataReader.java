@@ -7,7 +7,7 @@ import java.nio.file.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FileDataReader implements DataReader {
+public class FileDataReader implements FileDataReaderInterface {
     private final Path path;
 
     public FileDataReader(String path) {
@@ -15,7 +15,7 @@ public class FileDataReader implements DataReader {
 
     }
 
-    @Override
+
     public void readData(DataStorage dataStorage) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path, "*.txt")) {
             for (Path file : stream) {

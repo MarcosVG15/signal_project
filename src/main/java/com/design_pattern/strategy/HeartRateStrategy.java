@@ -46,7 +46,7 @@ public class HeartRateStrategy implements AlertInterface{
                 //System.out.println("Not enough data for now .....");
             }
             else{
-                if(Math.abs(average-currentRecord.getMeasurementValue()) >=THRESHOLD ){
+                if((average-currentRecord.getMeasurementValue()) <=THRESHOLD ){
                     generator.triggerAlert(factory.createAlert(String.valueOf(patientId)
                                                     , currentRecord.getRecordType()
                                                     , currentRecord.getTimestamp()));

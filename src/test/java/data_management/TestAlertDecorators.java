@@ -16,6 +16,10 @@ import java.io.IOException;
 
 public class TestAlertDecorators {
 
+    /** tests for whether the code decorates the inputs correctly
+     *
+     * @throws IOException
+     */
     @Test
     void testAlerts_NoRecords() throws IOException {
         Alert alert0 = new Alert("1", "TestCondition", 0);
@@ -28,6 +32,7 @@ public class TestAlertDecorators {
     @Test
     void testAlerts_RepeatedAlertDecorator() throws IOException {
         Alert alert0 = new Alert("1", "TestCondition", 0);
+
         AlertDecoratorDec alertD = new AlertDecoratorDec(alert0);
         DataStorage dataStorage = DataStorage.getInstance() ;
         dataStorage.addPatientData(1,32 , "ECG" ,0);
@@ -39,8 +44,6 @@ public class TestAlertDecorators {
 
 
         AlertGenerator alertGenerator = new   AlertGenerator(dataStorage);
-
-        Patient patient = new Patient(1);
 
         long[] interval = new long[2];
         interval[0] = 1 ;
